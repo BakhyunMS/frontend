@@ -33,3 +33,12 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# Environment files
+*.env
+*.env.development
+*.env.production
+*.env.test
+
+# Editor files
+.vscode
