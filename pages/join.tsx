@@ -16,7 +16,6 @@ import { toast, ToastContainer } from 'react-toastify'
 import React, { MouseEventHandler, useCallback, useState } from 'react'
 import Header from '../components/Header'
 import 'react-toastify/dist/ReactToastify.css'
-import { NextResponse } from 'next/server'
 import { ResponseData } from '../types'
 import { useRouter } from 'next/router'
 
