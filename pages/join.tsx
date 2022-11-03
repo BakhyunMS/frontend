@@ -64,18 +64,15 @@ const Join: NextPage = () => {
     }
   }
 
-  const [verify, { loading: verifyLoading, error: verifyError }] = useMutation(VERIFY_CODE, {
+  const [verify, { loading: verifyLoading }] = useMutation(VERIFY_CODE, {
     onCompleted: onVerifyCode
   })
-  const [sendCode, { loading: sendCodeLoading, error: sendCodeError }] = useMutation(SEND_CODE, {
+  const [sendCode, { loading: sendCodeLoading }] = useMutation(SEND_CODE, {
     onCompleted: onSendCode
   })
-  const [checkUser, { loading: checkUserLoading, error: checkUserError }] = useMutation(
-    CHECK_USER,
-    {
-      onCompleted: onCheckUser
-    }
-  )
+  const [checkUser, { loading: checkUserLoading }] = useMutation(CHECK_USER, {
+    onCompleted: onCheckUser
+  })
 
   const checkName = (name: string) => {
     const nameCode = name.charCodeAt(0)
