@@ -11,37 +11,62 @@ import {
 import React, { MouseEventHandler, useCallback, useState } from 'react'
 import Header from '../components/Header'
 import Link from 'next/link'
+import { ResponseData } from '../types'
+import { toast, ToastContainer } from 'react-toastify'
+import { useRouter } from 'next/router'
+import 'react-toastify/dist/ReactToastify.css'
 
 const Login: NextPage = () => {
-  const [login, { data, loading, error }] = useMutation(LOGIN)
-  const [submitData, setSubmitData] = useState({})
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+
+  const onCompleted = (data: ResponseData) => {
+    const {
+      login: { ok, message, token }
+    } = data
+    if (ok) {
+      if (token) localStorage.setItem('token', token)
+      else return alert('문제가 발생하였습니다. 담당 선생님께 문의하여주세요. (L1)')
+      alert('로그인에 성공하였습니다.')
+      return router.push('/')
+    } else return toast.error(message)
+  }
+
+  const [login, { loading }] = useMutation(LOGIN, { onCompleted })
+
+  const validateInputData = useCallback(async () => {
+    if (email.length < 1 || password.length < 1) {
+      toast.error('정보를 입력해 주세요!')
+      return false
+    }
+    return true
+  }, [email, password])
 
   const handleSubmit = useCallback<MouseEventHandler<HTMLButtonElement>>(
     async (e) => {
       e.preventDefault()
-      login({ variables: { ...submitData } })
-      if (data) return alert(data.message)
+      if (await validateInputData()) {
+        if (!loading) login({ variables: { email, password } })
+      }
     },
-    [login, data, submitData]
+    [login, email, password, loading, validateInputData]
   )
-  const handleEmailChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-    setSubmitData({ email: event.target.value })
-  }
-  const handlePasswordChange = (
-    event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
-  ) => {
-    setSubmitData({ password: event.target.value })
-  }
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword)
-  }
-  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+
+  const handleEmailChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+    setEmail(event.target.value)
+
+  const handlePasswordChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+    setPassword(event.target.value)
+
+  const handleClickShowPassword = () => setShowPassword(!showPassword)
+
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) =>
     event.preventDefault()
-  }
 
   return (
-    <div className="flex justify-center h-screen bg-hero bg-cover">
+    <div className="flex justify-center h-screen lg:bg-hero lg:bg-cover">
       <Header />
       <div className="flex flex-col self-center bg-white p-16 md:px-36 md:py-24 rounded-3xl shadow-2xl">
         <div className="text-3xl font-pretandard-extrabold pb-9 self-center">로그인</div>
@@ -53,7 +78,7 @@ const Login: NextPage = () => {
             <Input
               id="email"
               onChange={handleEmailChange}
-              placeholder="s10101@bakhyun.ms.kr"
+              placeholder="이메일"
               startAdornment={
                 <InputAdornment position="start">
                   <EnvelopeIcon className="h-6 w-6" />
@@ -107,6 +132,7 @@ const Login: NextPage = () => {
           </Link>
         </div>
       </div>
+      <ToastContainer />
     </div>
   )
 }

@@ -15,11 +15,12 @@ import {
 import { toast, ToastContainer } from 'react-toastify'
 import React, { MouseEventHandler, useCallback, useState } from 'react'
 import Header from '../components/Header'
-import 'react-toastify/dist/ReactToastify.css'
 import { ResponseData } from '../types'
 import { useRouter } from 'next/router'
+import 'react-toastify/dist/ReactToastify.css'
 
 const Join: NextPage = () => {
+  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -29,20 +30,14 @@ const Join: NextPage = () => {
   const [verifyPage, setVerifyPage] = useState(true)
   const [isExistingUser, setIsExistingUser] = useState(true)
 
-  let router = useRouter()
-
-  const redirect = (route: string) => {
-    router.push(route)
-  }
-
   const onVerifyCode = (data: ResponseData) => {
     const {
       verifyCode: { ok, message }
     } = data
     if (ok) {
       alert('회원가입에 성공하였습니다. 로그인하여 주세요.')
-      return redirect('/login')
-    } else alert(message)
+      return router.push('/login')
+    } else return toast.error(message)
   }
 
   const onSendCode = (data: ResponseData) => {
@@ -52,7 +47,7 @@ const Join: NextPage = () => {
     if (ok) {
       setVerifyPage(false)
       return toast.success('이메일을 전송하였습니다.')
-    } else alert(message)
+    } else return toast.error(message)
   }
 
   const onCheckUser = (data: ResponseData) => {
@@ -60,7 +55,7 @@ const Join: NextPage = () => {
       checkUser: { ok }
     } = data
     if (!ok) {
-      setIsExistingUser(false)
+      return setIsExistingUser(false)
     }
   }
 
@@ -173,7 +168,6 @@ const Join: NextPage = () => {
   const handleSubmit = useCallback<MouseEventHandler<HTMLButtonElement>>(
     async (e) => {
       e.preventDefault()
-
       if (code.length === 6 && Number(code)) {
         if (!verifyLoading) verify({ variables: { email, code, password, name, studentId } })
       } else {

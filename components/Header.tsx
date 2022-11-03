@@ -3,6 +3,7 @@ import { Transition } from '@headlessui/react'
 import {
   ArrowRightOnRectangleIcon,
   Bars3CenterLeftIcon,
+  ClipboardIcon,
   IdentificationIcon,
   MegaphoneIcon,
   UserCircleIcon,
@@ -10,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 
 const noticeMenu: Menu[] = [
   {
@@ -35,11 +37,17 @@ const noticeMenu: Menu[] = [
 ]
 
 const Header: FC = () => {
+  const router = useRouter()
   const [isOpen, setOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const HeaderRef = useRef<HTMLDivElement>(null)
 
   const toggleMenu = () => setOpen(!isOpen)
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    router.reload()
+  }
 
   const outsideClickHandler = useCallback((e: MouseEvent) => {
     const isInside = HeaderRef.current?.contains(e.target as Node)
@@ -50,9 +58,10 @@ const Header: FC = () => {
   }, [])
 
   useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('click', outsideClickHandler)
-    }
+    const token = localStorage.getItem('token')
+
+    if (token) setIsLoggedIn(true)
+    if (isOpen) document.addEventListener('click', outsideClickHandler)
   }, [isOpen, outsideClickHandler])
 
   return (
@@ -103,18 +112,30 @@ const Header: FC = () => {
                 </Link>
               ))}
             </div>
+            <Link href="/board">
+              <a className="flex items-center space-x-1">
+                <ClipboardIcon className="w-6 h-6" />
+                <span>자유게시판</span>
+              </a>
+            </Link>
             {isLoggedIn ? (
+              <>
+                <Link href="/mypage">
+                  <a className="flex items-center space-x-1">
+                    <UserCircleIcon className="w-6 h-6" />
+                    <span>마이페이지</span>
+                  </a>
+                </Link>
+                <button className="flex items-center space-x-1" onClick={handleLogout}>
+                  <ArrowRightOnRectangleIcon className="w-6 h-6" />
+                  <span>로그아웃</span>
+                </button>
+              </>
+            ) : (
               <Link href="/login">
                 <a className="flex items-center space-x-1">
-                  <UserCircleIcon className="w-6 h-6" />
-                  <span>마이페이지</span>
-                </a>
-              </Link>
-            ) : (
-              <Link href="/join">
-                <a className="flex items-center space-x-1">
                   <ArrowRightOnRectangleIcon className="w-6 h-6" />
-                  <span>가입하기</span>
+                  <span>로그인</span>
                 </a>
               </Link>
             )}
