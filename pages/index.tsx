@@ -1,42 +1,76 @@
 import { NextPage } from 'next'
-import Link from 'next/link'
 import Image from 'next/image'
+import Header from '../components/Header'
+import { Meal } from '../types'
+import axios from 'axios'
 
-const Main: NextPage = () => {
+const date = new Date()
+const month = date.getMonth() + 1
+const getMonth = month.toString().length === 2 ? String(month) : '0' + String(month)
+const getDate =
+  date.getDate().toString().length === 2 ? String(date.getDate()) : '0' + String(date.getDate())
+
+const Main: NextPage<MainProps> = ({ meal }) => {
+  let menu: string[] = []
+  if (meal.mealServiceDietInfo[0].head[1].RESULT.CODE === 'INFO-000') {
+    const data =
+      meal.mealServiceDietInfo[1].row[meal.mealServiceDietInfo[1].row.length - 1].DDISH_NM
+    menu = data.split('<br/>').map((dish) => dish.split('(')[0].trim().replace(/\*/gi, ''))
+  }
+
   return (
-    <div className="w-full h-screen bg-hero bg-cover">
-      <div className="flex w-full h-full flex-col justify-center">
-        <div className="w-11/12 h-3/5 md:w-3/5 lg:w-2/5 md:h-3/5 grid self-center items-center justify-items-center text-2xl md:space-y-2 bg-white rounded-3xl p-8 shadow-2xl">
-          <div className="flex flex-col items-center">
-            <div className="self-start flex items-center pb-2">
-              <Image src="/static/images/logo.webp" width={80} height={80} alt="logo" />
-            </div>
-            <p className="text-xl md:text-2xl self-start">환영합니다.</p>
-            <p className="text-xl md:text-2xl self-start font-pretandard-semibold">
-              로그인하여 서비스를 이용하세요.
-            </p>
-            <Link href="login">
-              <a>
-                <button className="flex justify-self-center text-lg border border-slate-100 hover:shadow-none hover:opacity-80 shadow-sm py-5 px-8 md:p-4 md:px-10 font-pretandard-semibold rounded-xl items-center space-x-4 mt-4">
-                  <Image
-                    src="/static/images/google.webp"
-                    width={20}
-                    height={20}
-                    alt="google_login"
-                  />
-                  <p>학교 구글 계정으로 로그인</p>
-                </button>
-              </a>
-            </Link>
-            <p className="text-sm pt-4 md:text-base font-pretandard-light md:pt-3">
-              * 학교에서 지급 받으신 구글 계정을 통해 로그인하세요. <br />
-              <span className="hidden">&nbsp;&nbsp;</span> 자세한 사항은 담당 선생님께 문의하세요.
-            </p>
+    <div className="w-full">
+      <Header />
+      <div className="flex mt-20 bg-blue-300 justify-center items-center space-x-8 p-8 lg:p-0">
+        <Image src="/static/images/main.svg" alt="이미지" width="250" height="400" />
+        <div className="text-white space-y-4">
+          <div className="text-xl lg:text-3xl font-pretandard-semibold">
+            함께하는 백현중학교! <br />
+            New Deal, 백현!
+          </div>
+          <div className="text-sm lg:text-base font-pretandard-extralight">
+            백현중학교 학생 자치회는 여러분의 즐거운 학교 생활을 응원합니다. <br />
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-flow-col justify-items-stretch space-x-8 mt-8 px-4">
+        <div className="justify-self-start">메뉴메뉴</div>
+        <div className="bg-slate-100 w-56 h-72 p-4 rounded-lg justify-self-end">
+          <div className="font-pretandard-medium pb-2 border-b border-black mb-4 self-end">
+            {getMonth}.{getDate}
+          </div>
+          <div className="space-y-1">
+            {menu.length > 0 ? (
+              menu.map((element, index) => <div key={index}>- {element}</div>)
+            ) : (
+              <div>급식이 없습니다.</div>
+            )}
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+export const getServerSideProps = async () => {
+  const now = String(date.getFullYear()) + getMonth + getDate
+  const res = await axios.get(
+    `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&KEY=${process.env.API_KEY}&SD_SCHUL_CODE=7551016&ATPT_OFCDC_SC_CODE=J10&MLSV_YMD=${now}`
+  )
+
+  if (now.length !== 8 || isNaN(Number(date)))
+    return {
+      props: { meal: { mealServiceDietInfo: [{ head: [{}, { RESULT: { CODE: 'date' } }] }] } }
+    }
+  if (!('mealServiceDietInfo' in res.data))
+    return {
+      props: { meal: { mealServiceDietInfo: [{ head: [{}, { RESULT: { CODE: 'error' } }] }] } }
+    }
+  return { props: { meal: res.data } }
+}
+
+interface MainProps {
+  meal: Meal
 }
 
 export default Main
